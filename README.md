@@ -1,4 +1,4 @@
-# 🚀 iCog Labs: Professional RAG System
+# 🚀  RAG System
 An end-to-end Retrieval-Augmented Generation system designed for the iCog Labs technical assessment.
 
 ## 🏗️ Architecture
