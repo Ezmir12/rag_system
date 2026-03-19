@@ -1,0 +1,14 @@
+langchain>=0.3.0
+langchain-community
+langchain-openai
+langchain-chroma
+langchain-experimental
+pypdf
+streamlit
+python-dotenv
+duckduckgo-search
+langchain-google-genai
+fastapi
+uvicorn
+python-multipart
+requests
