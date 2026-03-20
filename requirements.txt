@@ -12,3 +12,6 @@ fastapi
 uvicorn
 python-multipart
 requests
+Pillow
+pytesseract
+# Optional for full image OCR: pip install "unstructured[all-docs]"

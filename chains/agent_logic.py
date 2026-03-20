@@ -21,12 +21,14 @@ def build_advanced_chain(llm, vectorstore):
     # 2. Answer Generator
    
     qa_system_prompt = (
-    "You are a helpful assistant for iCog Labs. "
-    "You have been provided with documents via a RAG (Retrieval-Augmented Generation) system. "
-    "Always check the CONTEXT provided below to answer the user. "
-    "If the answer is in the context, use it. If not, tell the user you don't see that in the uploaded files.\n\n"
-    "CONTEXT:\n{context}"
-)
+        "You are a helpful assistant for iCog Labs. Use the CONTEXT below to answer the user's question. "
+        "When the context contains relevant information, provide a clear, accurate answer based on it. "
+        "If the context is empty or clearly unrelated to the question, say: 'I couldn't find relevant information about that in the uploaded documents.' "
+        "Do not claim information is missing if the context could reasonably support an answer. "
+        "Be concise but thorough.\n\n"
+        "CONTEXT:\n{context}\n\n"
+        "Now answer the user's question based on the context above."
+    )
     qa_prompt = ChatPromptTemplate.from_messages([
         ("system", qa_system_prompt),
         MessagesPlaceholder("chat_history"),
@@ -34,17 +36,22 @@ def build_advanced_chain(llm, vectorstore):
     ])
 
     def format_docs(docs):
-        # MULTIMODAL TIP: You can check docs for image metadata here
-        return "\n\n".join(doc.page_content for doc in docs)
+        return "\n\n---\n\n".join(doc.page_content for doc in docs if doc.page_content.strip())
+
+    def retrieve_with_fallback(x):
+        """Retrieve docs; if empty, fallback to direct search with original question."""
+        rewritten = x.get("rewritten_input") or x.get("input", "")
+        docs = advanced_retriever.invoke(rewritten)
+        if not docs:
+            # Fallback: try original question with base retriever
+            base = vectorstore.as_retriever(search_kwargs={"k": 8})
+            docs = base.invoke(x.get("input", rewritten))
+        return format_docs(docs)
 
     # 3. Final Chain (Supports Streaming)
     rag_chain = (
-        RunnablePassthrough.assign(
-            rewritten_input = question_rewriter 
-        )
-        | RunnablePassthrough.assign(
-            context = lambda x: format_docs(advanced_retriever.invoke(x["rewritten_input"]))
-        )
+        RunnablePassthrough.assign(rewritten_input=question_rewriter)
+        | RunnablePassthrough.assign(context=retrieve_with_fallback)
         | qa_prompt
         | llm
         | StrOutputParser()
