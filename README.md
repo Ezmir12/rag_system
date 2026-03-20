@@ -1,5 +1,5 @@
 # 🚀  RAG System
-An end-to-end Retrieval-Augmented Generation system designed for the iCog Labs technical assessment.
+An end-to-end Retrieval-Augmented Generation system 
 
 ## 🏗️ Architecture
 This system follows a modular micro-service inspired architecture:
@@ -16,7 +16,7 @@ This system follows a modular micro-service inspired architecture:
 ## 🚦 Quick Start
 1. **Environment:** Create a `.env` file with `OPENAI_API_KEY`.
 2. **Install:** `pip install -r requirements.txt`
-3. **Run Backend:** `uvicorn main:app --reload --port 8000`
+3. **Run Backend:** `uvicorn main:app --reload --port 8001`
 4. **Run Frontend:** `streamlit run app.py`
 
 ## 📂 Project Structure
