@@ -93,6 +93,16 @@ async def initialize(files: List[UploadFile] = File(..., description="PDF and im
 @app.post("/ask")
 async def ask(request: QuestionRequest):
     if state.chain is None:
+        # Attempt to recover chain from existing vector store if server was restarted
+        if os.path.exists("./chroma_db") and os.listdir("./chroma_db"):
+            try:
+                vectorstore = get_vectorstore()
+                llm = ChatOpenAI(model="gpt-4o-mini", streaming=True)
+                state.chain = build_advanced_chain(llm, vectorstore)
+            except Exception:
+                pass
+
+    if state.chain is None:
         raise HTTPException(
             status_code=503,
             detail="System not initialized. Please upload documents first.",
@@ -116,6 +126,7 @@ async def ask(request: QuestionRequest):
                         break
 
     return StreamingResponse(generate(), media_type="text/plain; charset=utf-8")
+
 
 
 

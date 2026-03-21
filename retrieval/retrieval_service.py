@@ -17,11 +17,11 @@ def reciprocal_rank_fusion(results: list, k=60):
 
 
 def _parse_queries(llm_response: str, original: str, max_queries: int = 4) -> list:
-    """Parse LLM output into clean search queries. Always include original question."""
+    
     queries = [original.strip()]
     lines = llm_response.strip().split("\n")
     for line in lines:
-        # Strip numbering (1., 2., 1), -, *, etc.)
+       
         cleaned = re.sub(r"^[\d\)\.\-\*\:\s]+", "", line).strip()
         if cleaned and len(cleaned) > 3 and cleaned.lower() not in (q.lower() for q in queries):
             queries.append(cleaned)
