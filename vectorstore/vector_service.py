@@ -17,7 +17,12 @@ def get_vectorstore(chunks=None):
     embeddings = get_embeddings()
     
     if chunks:
-        # Create new store from documents [cite: 95]
+        # Create new store from documents
+        # Clear old database so previous file citations (ghost chunks) do not reappear
+        if os.path.exists(persist_dir):
+            import shutil
+            shutil.rmtree(persist_dir, ignore_errors=True)
+            
         vectorstore = Chroma.from_documents(
             documents=chunks, 
             embedding=embeddings, 

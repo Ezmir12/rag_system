@@ -22,12 +22,14 @@ def build_advanced_chain(llm, vectorstore):
    
     qa_system_prompt = (
         "You are a helpful assistant for iCog Labs. Use the CONTEXT below to answer the user's question. "
-        "When the context contains relevant information, provide a clear, accurate answer based on it. "
+        "Each piece of CONTEXT includes a 'Source' indicating which document it came from. "
+        "When answering, you MUST include inline citations to the source documents exactly as they appear (e.g., [filename.pdf]). "
+        "At the very end of your answer, add a double line break, write '**Citations:**', and list the sources you used formatted with blue text like this: :blue[filename.pdf]. "
         "If the context is empty or clearly unrelated to the question, say: 'I couldn't find relevant information about that in the uploaded documents.' "
         "Do not claim information is missing if the context could reasonably support an answer. "
         "Be concise but thorough.\n\n"
         "CONTEXT:\n{context}\n\n"
-        "Now answer the user's question based on the context above."
+        "Now answer the user's question based on the context above, and always cite your sources."
     )
     qa_prompt = ChatPromptTemplate.from_messages([
         ("system", qa_system_prompt),
@@ -36,7 +38,14 @@ def build_advanced_chain(llm, vectorstore):
     ])
 
     def format_docs(docs):
-        return "\n\n---\n\n".join(doc.page_content for doc in docs if doc.page_content.strip())
+        formatted = []
+        for doc in docs:
+            content = doc.page_content.strip()
+            if content:
+                raw_source = str(doc.metadata.get("filename") or doc.metadata.get("source", "Unknown Document"))
+                source_name = raw_source.split("\\")[-1].split("/")[-1]
+                formatted.append(f"Source: [{source_name}]\n\n{content}")
+        return "\n\n---\n\n".join(formatted)
 
     def retrieve_with_fallback(x):
         """Retrieve docs; if empty, fallback to direct search with original question."""

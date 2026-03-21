@@ -3,7 +3,7 @@ from langchain_openai import OpenAIEmbeddings
 
 def process_documents(documents, embeddings_model):
     """
-    Implements Advanced Semantic Chunking as per iCog requirements.
+    Implements Advanced Semantic Chunking 
     """
     if not documents:
         return []

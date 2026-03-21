@@ -13,12 +13,14 @@ IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".tiff", ".tif"}
 TEXT_EXTENSIONS = {".txt", ".md", ".csv"}
 
 
-def _load_pdf(file_path: str) -> list:
+def _load_pdf(file_path: str, filename: str) -> list:
     """Load PDF via PyPDFLoader."""
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"The file at {file_path} was not found.")
     loader = PyPDFLoader(file_path)
     documents = loader.load()
+    for doc in documents:
+        doc.metadata["filename"] = filename
     if not documents:
         print("Warning: The PDF appears to be empty or image-only.")
     return documents
@@ -88,7 +90,7 @@ def load_documents(file_path: str, filename: str = None) -> list:
     ext = Path(filename).suffix.lower()
 
     if ext == ".pdf":
-        return _load_pdf(file_path)
+        return _load_pdf(file_path, filename)
     elif ext in IMAGE_EXTENSIONS:
         # Try pytesseract first (lighter), then Unstructured
         try:
@@ -109,4 +111,4 @@ def load_documents(file_path: str, filename: str = None) -> list:
 # Backward compatibility
 def load_pdf(file_path: str) -> list:
     """Load PDF only (legacy)."""
-    return _load_pdf(file_path)
+    return _load_pdf(file_path, os.path.basename(file_path))
