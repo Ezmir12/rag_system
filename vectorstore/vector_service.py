@@ -1,40 +1,45 @@
 import os
+import shutil
+from typing import Any, Optional
+
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
-from dotenv import load_dotenv
 
-load_dotenv() # Ensures OPENAI_API_KEY is loaded from your .env file
+from config import get_embedding_model, get_logger
 
-def get_embeddings():
+logger = get_logger(__name__)
+
+
+def get_embeddings() -> OpenAIEmbeddings:
     """Centralized embedding model configuration."""
-    return OpenAIEmbeddings(model="text-embedding-3-small")
+    return OpenAIEmbeddings(model=get_embedding_model())
 
-def get_vectorstore(chunks=None):
-    """
-    Retrieves or creates a Chroma vector store.
-    """
-    persist_dir = "./chroma_db"
+
+def get_vectorstore(chunks: Optional[list[Any]] = None) -> Chroma:
+    """Retrieve or create the persisted Chroma vector store."""
+    persist_dir = os.path.abspath("./chroma_db")
     embeddings = get_embeddings()
-    
+
     if chunks:
-        # Create new store from documents
-        # Clear old database so previous file citations (ghost chunks) do not reappear
-        if os.path.exists(persist_dir):
-            import shutil
-            shutil.rmtree(persist_dir, ignore_errors=True)
-            
-        vectorstore = Chroma.from_documents(
-            documents=chunks, 
-            embedding=embeddings, 
-            persist_directory=persist_dir
+        clear_vectorstore(persist_dir)
+        logger.info("Creating a new Chroma vector store at %s", persist_dir)
+        return Chroma.from_documents(
+            documents=chunks,
+            embedding=embeddings,
+            persist_directory=persist_dir,
         )
-        return vectorstore
-    
-    # Load existing store 
+
+    logger.info("Loading existing Chroma vector store from %s", persist_dir)
     return Chroma(
-        persist_directory=persist_dir, 
-        embedding_function=embeddings
+        persist_directory=persist_dir,
+        embedding_function=embeddings,
     )
 
 
+def clear_vectorstore(persist_dir: Optional[str] = None) -> None:
+    """Remove the persisted vector store directory if it exists."""
+    target_dir = persist_dir or os.path.abspath("./chroma_db")
+    if os.path.exists(target_dir):
+        shutil.rmtree(target_dir, ignore_errors=True)
+        logger.info("Removed vector store directory at %s", target_dir)
 
